@@ -30,14 +30,18 @@
 using namespace Akonadi;
 
 ClearCommand::ClearCommand(QObject *parent)
-    : AbstractCommand(parent)
+    : AbstractCommand(parent),
+      mResolveJob(0)
 {
     mShortHelp = ki18nc("@info:shell", "Delete all items in a collection").toString();
 }
 
 ClearCommand::~ClearCommand()
 {
-
+  if (mResolveJob != 0)
+  {
+    delete mResolveJob;
+  }
 }
 
 void ClearCommand::setupCommandOptions(KCmdLineOptions& options)
@@ -54,19 +58,41 @@ int ClearCommand::initCommand(KCmdLineArgs* parsedArgs)
     }
 
     mCollection = parsedArgs->arg(1);
-
+    mResolveJob = new CollectionResolveJob(mCollection, this);
+    if(!mResolveJob->hasUsableInput())
+    {
+	emit error(ki18nc("@info:shell",
+			  "Invalid parent collection '%1', '%2'")
+		  .subs(mCollection)
+		  .subs(mResolveJob->errorString()).toString());
+	delete mResolveJob;
+	mResolveJob = 0;
+	return InvalidUsage;
+    }
     return NoError;
 }
 
 void ClearCommand::start()
 {
-    CollectionResolveJob *job = new CollectionResolveJob(mCollection, this);
-    connect(job, SIGNAL(result(KJob*)), SLOT(onCollectionFetched(KJob*)));
-    job->start();
+    if(!allowDangerousOperation())
+    {
+      emit finished(RuntimeError);
+      return;
+    }
+    
+    connect(mResolveJob, SIGNAL(result(KJob*)), SLOT(onCollectionFetched(KJob*)));
+    mResolveJob->start();
 }
 
 void ClearCommand::onCollectionFetched(KJob* job)
 {
+    if (job->error() != 0)
+    {
+	emit error("Error: " + job->errorString());
+	emit finished(RuntimeError);
+	return;
+    }
+    
     CollectionResolveJob *resJob = qobject_cast<CollectionResolveJob*>(job);
     Collection c = resJob->collection();
     ItemFetchJob *fJob = new ItemFetchJob(c, this);

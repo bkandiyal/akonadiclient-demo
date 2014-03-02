@@ -24,6 +24,7 @@
 
 #include <abstractcommand.h>
 
+class CollectionResolveJob;
 class KJob;
 class ClearCommand : public AbstractCommand
 {
@@ -45,7 +46,8 @@ public Q_SLOTS:
 
 private:
     QString mCollection;
-
+    CollectionResolveJob *mResolveJob;
+    
 private Q_SLOTS:
     void onCollectionFetched(KJob*);
     void onItemsFetched(KJob*);
