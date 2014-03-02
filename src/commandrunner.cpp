@@ -32,8 +32,7 @@
 
 
 CommandRunner::CommandRunner( const KAboutData &aboutData, KCmdLineArgs *parsedArgs )
-  : mApplication( 0 ),
-    mCommand( 0 )
+  : mCommand( 0 )
 {
   ErrorReporter::setAppName( aboutData.appName() );
 
@@ -51,25 +50,18 @@ CommandRunner::CommandRunner( const KAboutData &aboutData, KCmdLineArgs *parsedA
   }
 
   connect( mCommand, SIGNAL(finished(int)), this, SLOT(onCommandFinished(int)) );
-
-  // TODO should we allow commands to optionally support GUI?
-  mApplication = new QCoreApplication( KCmdLineArgs::qtArgc(), KCmdLineArgs::qtArgv() );
-  mApplication->setApplicationName( aboutData.appName() );
-  mApplication->setApplicationVersion( aboutData.version() );
-  mApplication->setOrganizationDomain( aboutData.organizationDomain() );
 }
 
 CommandRunner::~CommandRunner()
 {
   delete mCommand;
-  delete mApplication;
 }
 
 int CommandRunner::exec()
 {
-  if ( mApplication && mCommand ) {
+  if ( mCommand ) {
     QMetaObject::invokeMethod( mCommand, "start", Qt::QueuedConnection );
-    return mApplication->exec();
+    return AbstractCommand::NoError;
   }
 
   return AbstractCommand::InvalidUsage;
@@ -77,7 +69,7 @@ int CommandRunner::exec()
 
 void CommandRunner::onCommandFinished( int exitCode )
 {
-  mApplication->exit( exitCode );
+  QCoreApplication::exit(exitCode);
 }
 
 void CommandRunner::onCommandError( const QString &error )

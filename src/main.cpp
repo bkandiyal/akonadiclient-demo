@@ -17,9 +17,11 @@
 */
 
 #include "commandrunner.h"
+#include "abstractcommand.h"
 
 #include <KAboutData>
 #include <KCmdLineArgs>
+#include <QCoreApplication>
 
 #include "version.h"
 
@@ -57,5 +59,20 @@ int main( int argc, char **argv )
   KCmdLineArgs *parsedArgs = KCmdLineArgs::parsedArgs();
 
   CommandRunner runner( aboutData, parsedArgs );
-  return runner.exec();
+  int ret = runner.exec();
+  
+  if(ret == 0)
+  {
+     // TODO should we allow commands to optionally support GUI?
+    QCoreApplication application(KCmdLineArgs::qtArgc(), KCmdLineArgs::qtArgv());
+    application.setApplicationName( aboutData.appName() );
+    application.setApplicationVersion( aboutData.version() );
+    application.setOrganizationDomain( aboutData.organizationDomain() );
+  
+    return application.exec();
+  }
+  else
+  {
+    return ret;
+  }
 }

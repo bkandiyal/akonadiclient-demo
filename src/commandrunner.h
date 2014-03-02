@@ -26,8 +26,6 @@ class AbstractCommand;
 class KAboutData;
 class KCmdLineArgs;
 
-class QCoreApplication;
-
 class CommandRunner : public QObject
 {
   Q_OBJECT
@@ -43,7 +41,6 @@ class CommandRunner : public QObject
     static void reportFatal(const QString &msg);
 
   private:
-    QCoreApplication *mApplication;
     AbstractCommand *mCommand;
 
   private Q_SLOTS:
