@@ -19,6 +19,8 @@
 #ifndef COMMANDRUNNER_H
 #define COMMANDRUNNER_H
 
+#include "commandfactory.h"
+
 #include <QObject>
 
 class AbstractCommand;
@@ -34,7 +36,7 @@ class CommandRunner : public QObject
     CommandRunner( const KAboutData &aboutData, KCmdLineArgs *parsedArgs );
     ~CommandRunner();
 
-    int exec();
+    int start();
 
     static void reportError(const QString &msg);
     static void reportWarning(const QString &msg);
@@ -42,7 +44,9 @@ class CommandRunner : public QObject
 
   private:
     AbstractCommand *mCommand;
-
+    KCmdLineArgs *mParsedArgs;
+    CommandFactory mFactory;
+    
   private Q_SLOTS:
     void onCommandFinished( int exitCode );
     void onCommandError( const QString &error );

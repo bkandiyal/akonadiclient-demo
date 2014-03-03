@@ -32,24 +32,11 @@
 
 
 CommandRunner::CommandRunner( const KAboutData &aboutData, KCmdLineArgs *parsedArgs )
-  : mCommand( 0 )
+  : mCommand( 0 ),
+    mParsedArgs( parsedArgs ),
+    mFactory( parsedArgs )
 {
-  ErrorReporter::setAppName( aboutData.appName() );
-
-  CommandFactory factory( parsedArgs );
-
-  mCommand = factory.createCommand();
-  Q_ASSERT( mCommand != 0 );
-
-  connect( mCommand, SIGNAL(error(QString)), this, SLOT(onCommandError(QString)) );
-
-  if ( mCommand->init( parsedArgs ) == AbstractCommand::InvalidUsage ) {
-    delete mCommand;
-    mCommand = 0;
-    std::exit( AbstractCommand::InvalidUsage );
-  }
-
-  connect( mCommand, SIGNAL(finished(int)), this, SLOT(onCommandFinished(int)) );
+    ErrorReporter::setAppName( aboutData.appName() );
 }
 
 CommandRunner::~CommandRunner()
@@ -57,8 +44,22 @@ CommandRunner::~CommandRunner()
   delete mCommand;
 }
 
-int CommandRunner::exec()
+int CommandRunner::start()
 {
+
+  mCommand = mFactory.createCommand();
+  Q_ASSERT( mCommand != 0 );
+
+  connect( mCommand, SIGNAL(error(QString)), this, SLOT(onCommandError(QString)) );
+
+  if ( mCommand->init( mParsedArgs ) == AbstractCommand::InvalidUsage ) {
+    delete mCommand;
+    mCommand = 0;
+    return AbstractCommand::InvalidUsage;
+  }
+
+  connect( mCommand, SIGNAL(finished(int)), this, SLOT(onCommandFinished(int)) );
+  
   if ( mCommand ) {
     QMetaObject::invokeMethod( mCommand, "start", Qt::QueuedConnection );
     return AbstractCommand::NoError;

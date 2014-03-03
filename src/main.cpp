@@ -57,18 +57,18 @@ int main( int argc, char **argv )
 
   // call right away so standard options like --version can terminate the program right here
   KCmdLineArgs *parsedArgs = KCmdLineArgs::parsedArgs();
-
+  
+  
+  // TODO should we allow commands to optionally support GUI?
+  QCoreApplication application(KCmdLineArgs::qtArgc(), KCmdLineArgs::qtArgv());
+  application.setApplicationName( aboutData.appName() );
+  application.setApplicationVersion( aboutData.version() );
+  application.setOrganizationDomain( aboutData.organizationDomain() );
+  
   CommandRunner runner( aboutData, parsedArgs );
-  int ret = runner.exec();
-  
-  if(ret == 0)
+  int ret = runner.start();
+  if( ret == AbstractCommand::NoError)
   {
-     // TODO should we allow commands to optionally support GUI?
-    QCoreApplication application(KCmdLineArgs::qtArgc(), KCmdLineArgs::qtArgv());
-    application.setApplicationName( aboutData.appName() );
-    application.setApplicationVersion( aboutData.version() );
-    application.setOrganizationDomain( aboutData.organizationDomain() );
-  
     return application.exec();
   }
   else
